@@ -1,0 +1,29 @@
+{
+  "type": "function",
+  "name": "legacy_query",
+  "description": "Query the legacy ERP for orders, customers, inventory, or invoices. Maps to the endpoints in spec/legacy-erp/openapi.yaml.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["intent", "id"],
+    "properties": {
+      "intent": {
+        "type": "string",
+        "enum": ["order", "customer", "inventory", "invoice"],
+        "description": "Which resource the user is asking about."
+      },
+      "id": {
+        "type": "string",
+        "description": "Resource id (numeric for order/inventory, name or id for customer, customerId for invoice)."
+      },
+      "filters": {
+        "type": "object",
+        "description": "Optional secondary filters (e.g. invoice status).",
+        "additionalProperties": {
+          "type": ["string", "number", "boolean", "null"]
+        }
+      }
+    }
+  }
+}

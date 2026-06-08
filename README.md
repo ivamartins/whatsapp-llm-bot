@@ -18,14 +18,38 @@ This project replaces the CLI with a 100-line OpenAI-compatible HTTP client and 
 
 ```
 whatsapp-llm-bot/
-├── index.js                # Boot: Baileys + message handler wiring
+├── index.js                       # Boot: Baileys + message handler wiring
 ├── src/
-│   ├── llm-client.js       # Tiny OpenAI-compatible HTTP client (Node fetch)
-│   └── prompts.js          # Generic prompt loader with YAML frontmatter
-├── prompts/                # LLM-agnostic prompt templates
-│   ├── system.md           # System prompt (the "agent")
-│   └── skill-reply.md      # Injected as additional system context
-├── test/                   # Mocha + chai, 61 tests, no network required
+│   ├── llm-client.js              # Tiny OpenAI-compatible HTTP client (Node fetch)
+│   └── prompts.js                 # Prompt + skill loader (flat + Anthropic layouts)
+├── prompts/                       # LLM-agnostic prompt templates (legacy layout)
+│   ├── system.md                  # System prompt (the "agent")
+│   └── skill-reply.md             # Injected as additional system context
+├── skills/                        # Anthropic-style skill catalog (preferred)
+│   ├── INDEX.md                   # Catalog of all skills
+│   ├── whatsapp-reply/SKILL.md    # Natural, tone-aware WhatsApp replies
+│   ├── legacy-query/SKILL.md      # NL → legacy ERP/CRM calls
+│   ├── summarizer/SKILL.md        # 1–3 sentence summaries
+│   ├── translator/SKILL.md        # pt-BR ↔ en ↔ es
+│   └── scheduler/SKILL.md         # Calendar events from chat
+├── spec/                          # OpenAPI 3.1 contracts for backends
+│   ├── INDEX.md
+│   ├── legacy-erp/openapi.yaml    # Orders, customers, inventory, invoices
+│   ├── legacy-erp/orders.schema.json
+│   └── crm/openapi.yaml           # Contacts, leads, notes
+├── mcp/                           # Model Context Protocol manifests
+│   ├── INDEX.md
+│   ├── mcp.json                   # Root manifest (opencode / Claude Desktop)
+│   └── servers/
+│       ├── legacy-erp.mcp.json    # Spec implementation entry
+│       ├── legacy-erp.mcp.js      # Stub server
+│       ├── google-calendar.mcp.json
+│       └── crm.mcp.json
+├── tools/                         # OpenAI function-calling JSON schemas
+│   ├── INDEX.md
+│   ├── legacy-query.tool.json
+│   └── scheduler.tool.json
+├── test/                          # Mocha + chai, 70 tests, no network required
 │   ├── llm-client.test.js
 │   ├── prompts.test.js
 │   └── bot.test.js
@@ -122,22 +146,47 @@ You should see:
 npm test
 ```
 
-61 tests, no network, no real WhatsApp. Runs in under 100 ms.
+70 tests, no network, no real WhatsApp. Runs in under 100 ms.
 
 ## Customizing the brain (prompts)
 
-The "brain" lives in `prompts/`. Two files ship by default:
+The "brain" lives across **four folders**, organized like a real AI-agent
+project so it scales beyond a toy demo:
 
-- `prompts/system.md` — the system prompt (the agent's role, style, rules).
-- `prompts/skill-reply.md` — appended to the system prompt as an additional context block, teaching the model how to craft replies.
+| Folder     | Purpose                                                                 | Convention       |
+| ---------- | ----------------------------------------------------------------------- | ---------------- |
+| `skills/`  | Anthropic-style **SKILL.md** catalog. One folder per capability.        | Anthropic Skills |
+| `spec/`    | **OpenAPI 3.1** contracts of every backend the bot can talk to.         | OpenAPI          |
+| `mcp/`     | **Model Context Protocol** manifests — how to spawn the sidecars.       | Anthropic MCP    |
+| `tools/`   | **Function-calling JSON schemas** the LLM can emit as `tool_call`s.     | OpenAI tools     |
+| `prompts/` | Legacy flat layout (still supported) — `system.md` + `*.md` skills.     | project-original |
 
-To customize:
+The loader (`src/prompts.js`) auto-detects which layout is in use and
+concatenates everything into a single system message.
 
-1. Edit `prompts/system.md` to change tone, language, business rules, or what to do for specific contacts.
-2. Add new skills: drop `prompts/my-skill.md` with YAML frontmatter (`name`, `description`, optional `model_hint`) and Markdown body. They are auto-discovered and concatenated into the system message.
-3. Add a different model or provider via `LLM_MODEL` / `LLM_PROVIDER`.
+### Quick customization recipe
 
-No code changes required. The loader picks them up on the next message.
+- **Change the tone / language / rules** → edit `prompts/system.md`.
+- **Add a new conversational skill** → `mkdir skills/my-skill/` and drop
+  a `SKILL.md` with YAML frontmatter (`name`, `description`, `version`,
+  `tags`, `triggers`, `allowed_tools`, `references`).
+- **Add a new tool that hits a backend** →
+  1. Drop an OpenAPI 3.1 spec in `spec/<backend>/openapi.yaml`.
+  2. Drop a function-calling schema in `tools/<tool>.tool.json`.
+  3. Add an MCP server entry in `mcp/servers/<backend>.mcp.json`.
+  4. Reference everything from the matching `SKILL.md` via `references:`.
+- **Add a different model or provider** → set `LLM_MODEL` / `LLM_PROVIDER`
+  in `.env`. No code changes.
+
+No restart of dependencies is required; the loader picks up new files
+on the next message.
+
+### Full reference
+
+- [`skills/INDEX.md`](./skills/INDEX.md) — what each skill does.
+- [`spec/INDEX.md`](./spec/INDEX.md) — backend contracts.
+- [`mcp/INDEX.md`](./mcp/INDEX.md) — runtime wiring.
+- [`tools/INDEX.md`](./tools/INDEX.md) — LLM-facing tool schemas.
 
 ## Running the tests
 
@@ -238,7 +287,7 @@ MIT — see `LICENSE`.
 Bot de WhatsApp **agnóstico a LLM** que conversa com qualquer API de chat completions compatível com OpenAI (xAI Grok, OpenAI, OpenRouter, Ollama, LM Studio, etc.).
 
 - **Diferencial em relação ao `whatsapp-grok-bot`**: nada de CLI Grok, nada de `.grok/agents` ou `.grok/skills`. Apenas HTTP + uma pasta `prompts/` genérica com frontmatter YAML.
-- **61 testes** (Mocha + chai), sem rede, sem WhatsApp real, sem API real. Rodam em < 100 ms.
+- **70 testes** (Mocha + chai), sem rede, sem WhatsApp real, sem API real. Rodam em < 100 ms.
 - **Mesmo deploy** do projeto original: PM2, systemd ou Docker. Sessão Baileys persistida em `auth/`.
 - **Como usar**:
   1. `cp .env.example .env` e preencher `LLM_PROVIDER` + `LLM_API_KEY`.

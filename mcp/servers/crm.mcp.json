@@ -1,0 +1,23 @@
+{
+  "name": "crm",
+  "version": "1.0.0",
+  "description": "MCP server for the internal CRM (contact search, lead capture, notes). Implements spec/crm/openapi.yaml.",
+  "transport": "stdio",
+  "command": "node",
+  "args": ["mcp/servers/crm.mcp.js"],
+  "env": {
+    "CRM_BASE_URL": "https://crm.internal.acme.local/api/v1",
+    "CRM_API_KEY":  "${CRM_API_KEY}"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false
+  },
+  "tools": [
+    { "name": "search_contacts",  "description": "Search contacts by free-text query.", "endpoint": { "method": "GET",  "path": "/contacts",          "operationId": "searchContacts" } },
+    { "name": "create_contact",   "description": "Create a new contact (lead capture).", "endpoint": { "method": "POST", "path": "/contacts",          "operationId": "createContact"  } },
+    { "name": "add_contact_note", "description": "Append a free-text note to a contact.", "endpoint": { "method": "POST", "path": "/contacts/{id}/notes","operationId": "addContactNote" } }
+  ],
+  "spec": "spec/crm/openapi.yaml"
+}

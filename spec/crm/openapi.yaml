@@ -1,0 +1,96 @@
+openapi: 3.1.0
+info:
+  title: CRM Contacts API
+  description: |
+    Stub for the customer-relationship-management (CRM) backend the bot can
+    talk to for contact lookups, lead creation, and follow-up scheduling.
+    Like `legacy-erp/openapi.yaml`, this spec is the contract the LLM
+    references; the real implementation lives in `mcp/servers/crm.mcp.json`.
+  version: 1.0.0
+  contact:
+    name: Code Solutions
+servers:
+  - url: https://crm.internal.acme.local/api/v1
+
+paths:
+  /contacts:
+    get:
+      summary: Search contacts
+      operationId: searchContacts
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string, minLength: 2 }
+        - in: query
+          name: limit
+          required: false
+          schema: { type: integer, default: 10, maximum: 50 }
+      responses:
+        '200':
+          description: Matching contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Contact' }
+    post:
+      summary: Create a new contact (lead)
+      operationId: createContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contact' }
+
+  /contacts/{id}/notes:
+    post:
+      summary: Append a note to a contact
+      operationId: addContactNote
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        '204': { description: Note added }
+
+components:
+  schemas:
+    Contact:
+      type: object
+      required: [id, name, email, createdAt]
+      properties:
+        id:        { type: string }
+        name:      { type: string }
+        email:     { type: string, format: email }
+        phone:     { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        createdAt: { type: string, format: date-time }
+    ContactInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:  { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        tags:
+          type: array
+          items: { type: string }

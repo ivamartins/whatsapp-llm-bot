@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/whatsapp-llm-bot/spec/legacy-erp/orders.schema.json",
+  "title": "Order",
+  "description": "A single order in the legacy ERP (see openapi.yaml).",
+  "type": "object",
+  "required": ["id", "status", "customerId", "items", "total", "currency", "createdAt"],
+  "properties": {
+    "id":           { "type": "string", "pattern": "^\\d{4,10}$" },
+    "status":       { "type": "string", "enum": ["criado", "separado", "enviado", "entregue", "cancelado"] },
+    "customerId":   { "type": "string" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sku", "qty"],
+        "properties": {
+          "sku": { "type": "string" },
+          "qty": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "total":        { "type": "number", "minimum": 0 },
+    "currency":     { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "createdAt":    { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

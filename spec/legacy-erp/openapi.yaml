@@ -1,0 +1,206 @@
+openapi: 3.1.0
+info:
+  title: Legacy ERP API
+  description: |
+    Stub describing the **legacy ERP backend** this WhatsApp bot can integrate
+    with via the `legacy-query` skill. The real backend is a Java/Play
+    monolith exposed only inside the corporate network — this spec is the
+    contract the LLM sees and the MCP server at `mcp/servers/legacy-erp.mcp.json`
+    implements.
+  version: 1.0.0
+  contact:
+    name: Code Solutions
+    url: https://ivamartins.github.io/code-solutions-site/
+  license:
+    name: Proprietary
+servers:
+  - url: https://erp.internal.acme.local/api/v1
+    description: Production (VPN-only)
+  - url: http://localhost:8080/api/v1
+    description: Local dev (Docker)
+
+tags:
+  - name: orders
+    description: Order lifecycle (creation, fulfillment, tracking)
+  - name: customers
+    description: Customer master data
+  - name: inventory
+    description: Stock and warehouse data
+  - name: invoices
+    description: Invoices and billing
+
+paths:
+  /orders/{id}:
+    get:
+      tags: [orders]
+      summary: Get order by id
+      operationId: getOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4,10}$'
+          description: Numeric order id
+      responses:
+        '200':
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                pending:
+                  value:
+                    id: "12345"
+                    status: "separacao"
+                    customerId: "7788"
+                    items:
+                      - sku: "SKU-001"
+                        qty: 2
+                    total: 199.80
+                    currency: "BRL"
+                    createdAt: "2025-07-01T13:24:00-03:00"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /customers/{id}:
+    get:
+      tags: [customers]
+      summary: Get customer by id or name (search)
+      operationId: getCustomer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Customer id (numeric) or full name for search
+      responses:
+        '200':
+          description: Customer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /inventory/{sku}:
+    get:
+      tags: [inventory]
+      summary: Get stock for a SKU
+      operationId: getInventory
+      parameters:
+        - in: path
+          name: sku
+          required: true
+          schema:
+            type: string
+            pattern: '^SKU-[A-Z0-9-]+$'
+      responses:
+        '200':
+          description: Stock info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inventory'
+
+  /invoices:
+    get:
+      tags: [invoices]
+      summary: List invoices by customer
+      operationId: listInvoices
+      parameters:
+        - in: query
+          name: customerId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [open, paid, overdue, cancelled]
+      responses:
+        '200':
+          description: Invoices list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+
+components:
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Order:
+      type: object
+      required: [id, status, customerId, items, total, currency, createdAt]
+      properties:
+        id: { type: string }
+        status:
+          type: string
+          enum: [criado, separado, enviado, entregue, cancelado]
+        customerId: { type: string }
+        items:
+          type: array
+          items:
+            type: object
+            required: [sku, qty]
+            properties:
+              sku: { type: string }
+              qty: { type: integer, minimum: 1 }
+        total: { type: number, format: float }
+        currency: { type: string, example: BRL }
+        createdAt: { type: string, format: date-time }
+
+    Customer:
+      type: object
+      required: [id, name, email]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        since: { type: string, format: date }
+
+    Inventory:
+      type: object
+      required: [sku, qty, warehouse]
+      properties:
+        sku: { type: string }
+        qty: { type: integer }
+        warehouse:
+          type: string
+          enum: [sp, rj, mg, rs]
+
+    Invoice:
+      type: object
+      required: [id, customerId, amount, dueDate, status]
+      properties:
+        id: { type: string }
+        customerId: { type: string }
+        amount: { type: number, format: float }
+        currency: { type: string, example: BRL }
+        dueDate: { type: string, format: date }
+        status:
+          type: string
+          enum: [open, paid, overdue, cancelled]
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: integer }
+        message: { type: string }

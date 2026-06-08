@@ -1,0 +1,25 @@
+{
+  "name": "google-calendar",
+  "version": "1.0.0",
+  "description": "Anthropic MCP reference server for Google Calendar. Used by the scheduler skill. Implemented by @modelcontextprotocol/server-google-calendar.",
+  "transport": "stdio",
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-google-calendar"],
+  "env": {
+    "GOOGLE_CLIENT_ID":     "${GOOGLE_CLIENT_ID}",
+    "GOOGLE_CLIENT_SECRET": "${GOOGLE_CLIENT_SECRET}",
+    "GOOGLE_REFRESH_TOKEN": "${GOOGLE_REFRESH_TOKEN}",
+    "DEFAULT_TZ":           "America/Sao_Paulo"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": false
+  },
+  "tools": [
+    { "name": "create_event",  "description": "Create a calendar event with attendees and notes." },
+    { "name": "list_events",   "description": "List events in a time window (ISO-8601 in/out)." },
+    { "name": "update_event",  "description": "Update an existing event (time, title, attendees)." },
+    { "name": "cancel_event",  "description": "Delete an event by id." }
+  ]
+}

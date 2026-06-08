@@ -1,0 +1,58 @@
+{
+  "name": "legacy-erp",
+  "version": "1.0.0",
+  "description": "MCP server exposing the legacy ERP (orders, customers, inventory, invoices) to any MCP-compatible LLM client. Implements the contract in spec/legacy-erp/openapi.yaml.",
+  "transport": "stdio",
+  "command": "node",
+  "args": ["mcp/servers/legacy-erp.mcp.js"],
+  "env": {
+    "ERP_BASE_URL": "https://erp.internal.acme.local/api/v1",
+    "ERP_API_KEY": "${ERP_API_KEY}",
+    "ERP_TIMEOUT_MS": "15000"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false
+  },
+  "tools": [
+    {
+      "name": "get_order",
+      "description": "Fetch a single order by id from the legacy ERP.",
+      "inputSchema": { "$ref": "https://example.com/whatsapp-llm-bot/spec/legacy-erp/orders.schema.json" },
+      "endpoint": {
+        "method": "GET",
+        "path": "/orders/{id}",
+        "operationId": "getOrder"
+      }
+    },
+    {
+      "name": "get_customer",
+      "description": "Fetch a customer by id or search by name.",
+      "endpoint": {
+        "method": "GET",
+        "path": "/customers/{id}",
+        "operationId": "getCustomer"
+      }
+    },
+    {
+      "name": "get_inventory",
+      "description": "Stock level for a SKU.",
+      "endpoint": {
+        "method": "GET",
+        "path": "/inventory/{sku}",
+        "operationId": "getInventory"
+      }
+    },
+    {
+      "name": "list_invoices",
+      "description": "List invoices for a customer.",
+      "endpoint": {
+        "method": "GET",
+        "path": "/invoices",
+        "operationId": "listInvoices"
+      }
+    }
+  ],
+  "spec": "spec/legacy-erp/openapi.yaml"
+}

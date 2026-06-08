@@ -1,0 +1,53 @@
+[
+  {
+    "type": "function",
+    "name": "create_event",
+    "description": "Create a calendar event (Google Calendar via the google-calendar MCP server).",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "start_iso", "duration_minutes"],
+      "properties": {
+        "title":            { "type": "string", "minLength": 1, "maxLength": 200 },
+        "start_iso":        { "type": "string", "format": "date-time", "description": "ISO-8601 with explicit offset, e.g. 2025-07-10T15:00:00-03:00" },
+        "duration_minutes": { "type": "integer", "minimum": 5, "maximum": 1440 },
+        "attendees": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of email addresses or E.164 phone numbers."
+        },
+        "notes": { "type": "string", "maxLength": 4000 }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "name": "list_events",
+    "description": "List calendar events in a time window.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_iso", "to_iso"],
+      "properties": {
+        "from_iso": { "type": "string", "format": "date-time" },
+        "to_iso":   { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "name": "cancel_event",
+    "description": "Cancel a calendar event by id.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id"],
+      "properties": {
+        "event_id": { "type": "string" }
+      }
+    }
+  }
+]

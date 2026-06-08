@@ -28,6 +28,10 @@ describe('whatsapp-llm-bot (module shape)', function () {
     assert.ok(fs.existsSync(path.join(root, 'package.json')));
     assert.ok(fs.existsSync(path.join(root, 'prompts', 'system.md')));
     assert.ok(fs.existsSync(path.join(root, 'prompts', 'skill-reply.md')));
+    assert.ok(fs.existsSync(path.join(root, 'skills', 'INDEX.md')));
+    assert.ok(fs.existsSync(path.join(root, 'spec', 'INDEX.md')));
+    assert.ok(fs.existsSync(path.join(root, 'mcp', 'INDEX.md')));
+    assert.ok(fs.existsSync(path.join(root, 'tools', 'INDEX.md')));
   });
 });
 
@@ -234,6 +238,36 @@ describe('generateReply', function () {
     assert.strictEqual(captured[1].role, 'user');
     assert.match(captured[1].content, /From: Caio/);
     assert.match(captured[1].content, /Message: ping/);
+  });
+
+  it('auto-discovers skills from both skills/ (Anthropic) and prompts/ (flat)', function () {
+    const names = bundle.skills.map((s) => s.name);
+    assert.ok(
+      names.includes('whatsapp-reply'),
+      `expected whatsapp-reply in skills, got ${names.join(', ')}`
+    );
+    assert.ok(
+      names.includes('summarizer'),
+      `expected summarizer (from skills/) in skills, got ${names.join(', ')}`
+    );
+    assert.ok(
+      names.includes('translator'),
+      `expected translator (from skills/) in skills, got ${names.join(', ')}`
+    );
+    assert.ok(
+      names.includes('scheduler'),
+      `expected scheduler (from skills/) in skills, got ${names.join(', ')}`
+    );
+    assert.ok(
+      names.includes('legacy-query'),
+      `expected legacy-query (from skills/) in skills, got ${names.join(', ')}`
+    );
+  });
+
+  it('reports the layout it used in meta.sources', function () {
+    assert.strictEqual(bundle.meta.sources.layout, 'anthropic');
+    assert.ok(bundle.meta.sources.skills);
+    assert.ok(bundle.meta.sources.prompts);
   });
 
   it('uses store history when caller does not pass history', async function () {
