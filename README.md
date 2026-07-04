@@ -281,20 +281,3 @@ To plug in legacy data:
 MIT — see `LICENSE`.
 
 ---
-
-## Resumo em português
-
-Bot de WhatsApp **agnóstico a LLM** que conversa com qualquer API de chat completions compatível com OpenAI (xAI Grok, OpenAI, OpenRouter, Ollama, LM Studio, etc.).
-
-- **Diferencial em relação ao `whatsapp-grok-bot`**: nada de CLI Grok, nada de `.grok/agents` ou `.grok/skills`. Apenas HTTP + uma pasta `prompts/` genérica com frontmatter YAML.
-- **70 testes** (Mocha + chai), sem rede, sem WhatsApp real, sem API real. Rodam em < 100 ms.
-- **Mesmo deploy** do projeto original: PM2, systemd ou Docker. Sessão Baileys persistida em `auth/`.
-- **Como usar**:
-  1. `cp .env.example .env` e preencher `LLM_PROVIDER` + `LLM_API_KEY`.
-  2. `npm install && npm start`.
-  3. Escanear o QR code uma vez.
-  4. Mande mensagens — o bot responde usando o `prompts/system.md` configurado.
-
-Mantido como exemplo vivo dos serviços de **agentes de IA** e **modernização de sistemas legados** oferecidos pela Code Solutions. Veja também o site: https://ivamartins.github.io/code-solutions-site/
-
-Boa sorte! Se precisar ajustar prompts, trocar provedor, ou plugar em um sistema legado, é só editar `prompts/` e `.env` — sem mexer no código.
