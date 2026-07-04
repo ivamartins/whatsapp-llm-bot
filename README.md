@@ -1,5 +1,9 @@
 # WhatsApp + LLM Bot (LLM-agnostic)
 
+[![CI](https://github.com/ivamartins/whatsapp-llm-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/ivamartins/whatsapp-llm-bot/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)
+
 Bot that listens to WhatsApp messages and replies using **any OpenAI-compatible chat completions API** — xAI Grok, OpenAI, OpenRouter, Ollama, LM Studio, vLLM, or any custom endpoint.
 
 This is the **LLM-agnostic** version of [whatsapp-grok-bot](https://github.com/ivamartins/whatsapp-grok-bot): no CLI tool, no provider-specific agent files. Just HTTP + a tiny prompt loader. The Grok-CLI version remains as a separate historical example of the `spawn`-based integration.
